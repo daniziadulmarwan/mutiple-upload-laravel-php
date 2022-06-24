@@ -1,0 +1,35 @@
+//Form
+<form action="/unggah-foto" method="post" enctype="multipart/form-data">
+  @csrf
+  <div class="mb-3"><label for="formFile" class="form-label">Choose files to upload</label>
+    <input class="form-control" name="filename[]" multiple type="file" id="formFile">
+  </div>
+  <button type="submit" class="btn btn-primary float-right">Upload File</button>
+</form>
+
+
+//Controller
+Route::post('/upload', function (Request $request) {
+    $request->validate([
+        'filename' => 'required',
+        'filename.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048'
+    ]);
+    $data = [];
+    if ($request->hasfile('filename')) {
+        foreach ($request->file('filename') as $image) {
+            $name = $image->store('uploaded');
+            $data[] = $name;
+        }
+    }
+    $form = new FileUpload();
+    $form->imagefile = json_encode($data);
+    $form->save();
+    return back()->with('success', 'Your images has been successfully');
+});
+
+//Display
+@foreach ($images as $item)
+  @foreach (json_decode($item->imagefile) as $image)
+     <img src="/storage/{{ $image }}" class="d-block w-100" />                            
+  @endforeach
+@endforeach
